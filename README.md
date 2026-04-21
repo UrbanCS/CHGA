@@ -1,6 +1,6 @@
 # CHGA Mobile PWA
 
-MVP d'une Progressive Web App mobile-first pour CHGA. L'app ne clone pas le site WordPress: elle lit les données publiques du site `https://www.chga.fm`, les normalise via un petit proxy Node/Vercel, puis les affiche dans une interface légère.
+MVP d'une Progressive Web App mobile-first pour CHGA. L'app ne clone pas le site WordPress: elle lit les données publiques du site `https://www.chga.fm`, les normalise via un petit proxy serverless Netlify, puis les affiche dans une interface légère.
 
 ## 1. Audit de faisabilité
 
@@ -18,9 +18,9 @@ Point important: les nouvelles récentes retournent parfois `content.rendered`, 
 
 ## 2. Recommandation technique
 
-Architecture retenue: React + TypeScript + Vite + Tailwind côté frontend, avec fonctions API Node/Vercel côté proxy.
+Architecture retenue: React + TypeScript + Vite + Tailwind côté frontend, avec fonctions API Netlify côté proxy.
 
-Ce choix garde l'app rapide et simple à déployer, tout en évitant une dépendance fragile au HTML côté navigateur. Le proxy résout aussi les limites CORS et les champs WordPress manquants pour les nouvelles. Aucun backend lourd ni base de données n'est nécessaire pour le MVP. En local, un mini serveur API sans Express reproduit les fonctions Vercel pour lancer l'app avec une seule commande.
+Ce choix garde l'app rapide et simple à déployer, tout en évitant une dépendance fragile au HTML côté navigateur. Le proxy résout aussi les limites CORS et les champs WordPress manquants pour les nouvelles. Aucun backend lourd ni base de données n'est nécessaire pour le MVP. En local, un mini serveur API sans Express reproduit les fonctions Netlify pour lancer l'app avec une seule commande.
 
 ## 3. Scope MVP
 
@@ -48,7 +48,7 @@ Phase 2:
 ## 4. Échéancier réaliste
 
 - Jour 1: audit, architecture, MVP nouvelles + article + direct
-- Jour 2: PWA, cache, polish mobile, déploiement Vercel
+- Jour 2: PWA, cache, polish mobile, déploiement Netlify
 - Jour 3: OneSignal, webhook WordPress, tests appareils iOS/Android
 - Jour 4: balados/événements améliorés et corrections client
 
@@ -57,13 +57,16 @@ Phase 2:
 ```text
 .
 ├── api/
-│   ├── _lib/chga.ts
-│   ├── events.ts
-│   ├── live.ts
-│   ├── news.ts
-│   ├── news/[slug].ts
-│   ├── podcasts.ts
-│   └── push-webhook.ts
+│   └── _lib/chga.ts
+├── netlify/
+│   └── functions/
+│       ├── _response.ts
+│       ├── events.ts
+│       ├── live.ts
+│       ├── news.ts
+│       ├── news-detail.ts
+│       ├── podcasts.ts
+│       └── push-webhook.ts
 ├── public/
 │   ├── icons/
 │   │   ├── icon-192.png
@@ -79,9 +82,9 @@ Phase 2:
 │   ├── App.tsx
 │   └── main.tsx
 ├── .env.example
+├── netlify.toml
 ├── package.json
 ├── tailwind.config.ts
-├── vercel.json
 └── vite.config.ts
 ```
 
@@ -115,14 +118,15 @@ npm run preview
 
 ## 8. Déploiement
 
-### Vercel recommandé
+### Netlify recommandé
 
-1. Créer un projet Vercel depuis ce dépôt.
+1. Créer un nouveau site Netlify depuis ce dépôt.
 2. Garder la commande de build: `npm run build`.
 3. Garder le dossier de sortie: `dist`.
-4. Déployer.
+4. Netlify détectera `netlify.toml`.
+5. Déployer.
 
-Les fonctions dans `api/` deviennent automatiquement:
+Les redirects dans `netlify.toml` exposent les fonctions sous:
 
 - `/api/news`
 - `/api/news/:slug`
@@ -131,9 +135,15 @@ Les fonctions dans `api/` deviennent automatiquement:
 - `/api/events`
 - `/api/push-webhook`
 
-### Netlify
+Les fonctions Netlify réelles sont dans `netlify/functions/`. Le dossier `api/_lib/` contient seulement la logique partagée d'accès CHGA.
 
-Possible, mais il faudra déplacer les fonctions Vercel vers `netlify/functions`. Pour aller vite, Vercel est le chemin le plus direct.
+### Développement local Netlify
+
+```bash
+npm run dev:netlify
+```
+
+Cette commande utilise le CLI Netlify. Elle peut demander une connexion Netlify. Pour travailler sans connexion, `npm run dev` lance Vite avec le proxy API local.
 
 ## 9. Personnalisation
 
@@ -172,12 +182,12 @@ Déjà présent dans le MVP:
 Étapes restantes:
 
 1. Créer une app Web Push dans OneSignal.
-2. Configurer le domaine de production Vercel.
-3. Ajouter `VITE_ONESIGNAL_APP_ID` dans Vercel.
+2. Configurer le domaine de production Netlify.
+3. Ajouter `VITE_ONESIGNAL_APP_ID` dans Netlify.
 4. Ajouter le SDK OneSignal côté frontend.
 5. Installer/configurer le plugin OneSignal WordPress ou créer un webhook WordPress à la publication d'un post.
 6. Faire appeler `/api/push-webhook` par WordPress avec `x-chga-secret`.
-7. Dans `api/push-webhook.ts`, appeler l'API REST OneSignal avec le titre, l'extrait et l'URL de la nouvelle.
+7. Dans `netlify/functions/push-webhook.ts`, appeler l'API REST OneSignal avec le titre, l'extrait et l'URL de la nouvelle.
 
 ## 11. Limites actuelles
 
