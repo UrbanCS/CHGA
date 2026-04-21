@@ -7,7 +7,8 @@ export default {
       colors: {
         chga: {
           blue: "#151f6d",
-          red: "#e31d2f",
+          red: "#fa4616",
+          orange: "#fa4616",
           ink: "#141720",
           mist: "#f4f7fb"
         }
