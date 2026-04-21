@@ -1,8 +1,12 @@
 # CHGA Mobile PWA
 
+## Français
+
 MVP d'une Progressive Web App mobile-first pour CHGA. L'app ne clone pas le site WordPress: elle lit les données publiques du site `https://www.chga.fm`, les normalise via un petit proxy serverless Netlify, puis les affiche dans une interface légère.
 
-## 1. Audit de faisabilité
+Site de production: `https://chgamobile.netlify.app/`
+
+### 1. Audit de faisabilité
 
 Le site expose une API REST WordPress exploitable à `https://www.chga.fm/wp-json/`.
 
@@ -16,13 +20,13 @@ Endpoints validés:
 
 Point important: les nouvelles récentes retournent parfois `content.rendered`, `excerpt.rendered` et `featured_media` vides dans l'API REST. Les pages publiques contiennent pourtant l'article complet et l'image. Le MVP utilise donc l'API WP comme source principale et enrichit les nouvelles côté serveur en lisant la page publique de l'article.
 
-## 2. Recommandation technique
+### 2. Recommandation technique
 
 Architecture retenue: React + TypeScript + Vite + Tailwind côté frontend, avec fonctions API Netlify côté proxy.
 
 Ce choix garde l'app rapide et simple à déployer, tout en évitant une dépendance fragile au HTML côté navigateur. Le proxy résout aussi les limites CORS et les champs WordPress manquants pour les nouvelles. Aucun backend lourd ni base de données n'est nécessaire pour le MVP. En local, un mini serveur API sans Express reproduit les fonctions Netlify pour lancer l'app avec une seule commande.
 
-## 3. Scope MVP
+### 3. Scope MVP
 
 Inclus dans le MVP:
 
@@ -45,14 +49,14 @@ Phase 2:
 - Analytics PWA
 - Synchronisation fine du cache d'articles
 
-## 4. Échéancier réaliste
+### 4. Échéancier réaliste
 
 - Jour 1: audit, architecture, MVP nouvelles + article + direct
 - Jour 2: PWA, cache, polish mobile, déploiement Netlify
 - Jour 3: OneSignal, webhook WordPress, tests appareils iOS/Android
 - Jour 4: balados/événements améliorés et corrections client
 
-## 5. Arborescence
+### 5. Arborescence
 
 ```text
 .
@@ -71,6 +75,7 @@ Phase 2:
 │   ├── icons/
 │   │   ├── icon-192.png
 │   │   └── icon-512.png
+│   ├── favicon.ico
 │   ├── manifest.webmanifest
 │   └── sw.js
 ├── scripts/dev-api.ts
@@ -88,7 +93,7 @@ Phase 2:
 └── vite.config.ts
 ```
 
-## 6. Installation locale
+### 6. Installation locale
 
 ```bash
 npm install
@@ -109,16 +114,16 @@ http://localhost:8787
 
 Dans WSL avec Node Windows, le serveur peut être plus fiable depuis le navigateur Windows que depuis `curl` Linux. L'interface reste disponible sur `http://localhost:5173`.
 
-## 7. Build production
+### 7. Build production
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## 8. Déploiement
+### 8. Déploiement
 
-### Netlify recommandé
+Netlify est recommandé.
 
 1. Créer un nouveau site Netlify depuis ce dépôt.
 2. Garder la commande de build: `npm run build`.
@@ -137,7 +142,7 @@ Les redirects dans `netlify.toml` exposent les fonctions sous:
 
 Les fonctions Netlify réelles sont dans `netlify/functions/`. Le dossier `api/_lib/` contient seulement la logique partagée d'accès CHGA.
 
-### Développement local Netlify
+Développement local Netlify:
 
 ```bash
 npm run dev:netlify
@@ -145,7 +150,7 @@ npm run dev:netlify
 
 Cette commande utilise le CLI Netlify. Elle peut demander une connexion Netlify. Pour travailler sans connexion, `npm run dev` lance Vite avec le proxy API local.
 
-## 9. Personnalisation
+### 9. Personnalisation
 
 Nom de l'app:
 
@@ -161,12 +166,13 @@ Couleurs:
 
 Icônes:
 
-- Remplacer `public/icons/icon-192.png`
-- Remplacer `public/icons/icon-512.png`
+- `public/icons/icon-192.png`
+- `public/icons/icon-512.png`
+- `public/favicon.ico`
 
-Les icônes actuelles sont des placeholders propres aux couleurs CHGA. Pour production, exporter les vraies icônes depuis le logo officiel.
+Les icônes actuelles utilisent les assets officiels CHGA récupérés depuis le site existant.
 
-## 10. Notifications push
+### 10. Notifications push
 
 Choix recommandé: OneSignal.
 
@@ -189,14 +195,14 @@ Déjà présent dans le MVP:
 6. Faire appeler `/api/push-webhook` par WordPress avec `x-chga-secret`.
 7. Dans `netlify/functions/push-webhook.ts`, appeler l'API REST OneSignal avec le titre, l'extrait et l'URL de la nouvelle.
 
-## 11. Limites actuelles
+### 11. Limites actuelles
 
 - Les nouvelles nécessitent parfois un enrichissement par scraping serveur, car l'API REST WordPress ne retourne pas toujours le contenu complet.
-- Le cache service worker reste volontairement minimal.
+- Le cache service worker reste volontairement minimal et utilise une stratégie network-first pour les navigations.
 - Les notifications ne sont pas activées sans compte OneSignal et configuration du domaine final.
 - Les balados et événements sont en lecture légère dans l'onglet Plus.
 
-## 12. Checklist finale de test
+### 12. Checklist finale de test
 
 - `npm install`
 - `npm run build`
@@ -210,3 +216,222 @@ Déjà présent dans le MVP:
 - Vérifier installation PWA dans Chrome mobile/desktop
 - Tester hors ligne: l'app shell doit s'afficher
 - Tester sur iOS Safari et Android Chrome avant livraison client
+
+---
+
+## English
+
+Mobile-first Progressive Web App MVP for CHGA. The app does not clone the WordPress site: it reads public data from `https://www.chga.fm`, normalizes it through a small Netlify serverless proxy, then displays it in a lightweight mobile interface.
+
+Production site: `https://chgamobile.netlify.app/`
+
+### 1. Feasibility Audit
+
+The site exposes a usable WordPress REST API at `https://www.chga.fm/wp-json/`.
+
+Validated endpoints:
+
+- News: `wp/v2/posts?categories=19&_embed=1`
+- Categories: `wp/v2/categories`
+- Podcasts: `wp/v2/podcast` and `ssp/v1/episodes`
+- Events: `tribe/events/v1/events`
+- Live radio: `chga/v1/radio/update` + public AJAX endpoint `admin-ajax.php?action=get_live_radio`
+
+Important note: recent news posts sometimes return empty `content.rendered`, `excerpt.rendered`, and `featured_media` fields through the REST API. The public article pages still contain the complete article and image. The MVP therefore uses the WordPress API as the primary source and enriches news items server-side by reading the public article page when required.
+
+### 2. Technical Recommendation
+
+Chosen architecture: React + TypeScript + Vite + Tailwind on the frontend, with Netlify Functions as the API proxy.
+
+This keeps the app fast and easy to deploy while avoiding fragile browser-side HTML scraping. The proxy also solves CORS concerns and compensates for missing WordPress fields. No heavy backend or database is needed for the MVP. Locally, a small API server without Express mirrors the Netlify Functions so the app can run with one command.
+
+### 3. MVP Scope
+
+Included in the MVP:
+
+- Mobile-first home screen
+- Real CHGA latest news list
+- Cards with image, title, date, category, and excerpt
+- Full article detail view
+- Live radio tab with the real audio stream
+- PWA manifest, icons, service worker, and minimal app shell cache
+- Loading, network error, and empty states
+- Recent podcasts and events in the More tab
+- Push webhook architecture ready to connect
+
+Phase 2:
+
+- Full production push notifications with OneSignal
+- Category navigation and search
+- Favorites / offline article reading
+- Full embedded podcast player
+- PWA analytics
+- More granular article caching
+
+### 4. Realistic Timeline
+
+- Day 1: audit, architecture, news + article + live MVP
+- Day 2: PWA, cache, mobile polish, Netlify deployment
+- Day 3: OneSignal, WordPress webhook, iOS/Android device testing
+- Day 4: improved podcasts/events and client feedback fixes
+
+### 5. Project Structure
+
+```text
+.
+├── api/
+│   └── _lib/chga.ts
+├── netlify/
+│   └── functions/
+│       ├── _response.ts
+│       ├── events.ts
+│       ├── live.ts
+│       ├── news.ts
+│       ├── news-detail.ts
+│       ├── podcasts.ts
+│       └── push-webhook.ts
+├── public/
+│   ├── icons/
+│   │   ├── icon-192.png
+│   │   └── icon-512.png
+│   ├── favicon.ico
+│   ├── manifest.webmanifest
+│   └── sw.js
+├── scripts/dev-api.ts
+├── src/
+│   ├── components/
+│   ├── lib/
+│   ├── pages/
+│   ├── styles/index.css
+│   ├── App.tsx
+│   └── main.tsx
+├── .env.example
+├── netlify.toml
+├── package.json
+├── tailwind.config.ts
+└── vite.config.ts
+```
+
+### 6. Local Setup
+
+```bash
+npm install
+npm run dev
+```
+
+The app starts at:
+
+```text
+http://localhost:5173
+```
+
+The local API proxy starts at:
+
+```text
+http://localhost:8787
+```
+
+When using WSL with Windows Node, the server may be more reliable from a Windows browser than from Linux `curl`. The UI remains available at `http://localhost:5173`.
+
+### 7. Production Build
+
+```bash
+npm run build
+npm run preview
+```
+
+### 8. Deployment
+
+Netlify is recommended.
+
+1. Create a new Netlify site from this repository.
+2. Keep the build command as `npm run build`.
+3. Keep the publish directory as `dist`.
+4. Netlify will detect `netlify.toml`.
+5. Deploy.
+
+Redirects in `netlify.toml` expose the functions under:
+
+- `/api/news`
+- `/api/news/:slug`
+- `/api/live`
+- `/api/podcasts`
+- `/api/events`
+- `/api/push-webhook`
+
+The actual Netlify Functions live in `netlify/functions/`. The `api/_lib/` folder only contains shared CHGA access logic.
+
+Netlify local development:
+
+```bash
+npm run dev:netlify
+```
+
+This command uses the Netlify CLI and may require a Netlify login. To work without logging in, `npm run dev` starts Vite with the local API proxy.
+
+### 9. Customization
+
+App name:
+
+- `public/manifest.webmanifest`
+- `index.html`
+- `src/App.tsx`
+
+Colors:
+
+- `tailwind.config.ts`
+- `src/styles/index.css`
+- `public/manifest.webmanifest` for `theme_color`
+
+Icons:
+
+- `public/icons/icon-192.png`
+- `public/icons/icon-512.png`
+- `public/favicon.ico`
+
+The current icons use official CHGA assets retrieved from the existing website.
+
+### 10. Push Notifications
+
+Recommended provider: OneSignal.
+
+Reason: quick setup, low cost at launch, possible WordPress integration, and less server code than a custom Web Push implementation.
+
+Already present in the MVP:
+
+- Service worker with a `push` listener
+- `/api/push-webhook` endpoint
+- Planned `VITE_ONESIGNAL_APP_ID` variable
+- Optional `CHGA_PUSH_WEBHOOK_SECRET`
+
+Remaining steps:
+
+1. Create a Web Push app in OneSignal.
+2. Configure the production Netlify domain.
+3. Add `VITE_ONESIGNAL_APP_ID` in Netlify.
+4. Add the OneSignal SDK on the frontend.
+5. Install/configure the OneSignal WordPress plugin or create a WordPress webhook on post publication.
+6. Make WordPress call `/api/push-webhook` with `x-chga-secret`.
+7. In `netlify/functions/push-webhook.ts`, call the OneSignal REST API with the news title, excerpt, and URL.
+
+### 11. Current Limitations
+
+- News items sometimes require server-side page enrichment because the WordPress REST API does not always return complete content.
+- The service worker cache is intentionally minimal and uses network-first for navigations.
+- Push notifications are not active until OneSignal and the final domain are configured.
+- Podcasts and events are lightweight in the More tab.
+
+### 12. Final Test Checklist
+
+- `npm install`
+- `npm run build`
+- `npm run dev`
+- Open `http://localhost:5173`
+- Check the news list
+- Open a full article
+- Check the Live button and audio playback
+- Check the More tab
+- Check `manifest.webmanifest`
+- Check PWA installation in Chrome mobile/desktop
+- Test offline mode: the app shell should display
+- Test on iOS Safari and Android Chrome before client delivery
