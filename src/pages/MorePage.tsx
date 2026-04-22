@@ -73,7 +73,7 @@ export function MorePage() {
               disabled={pushSubscribed}
               onClick={enableNotifications}
             >
-              {pushSubscribed ? "Déjà abonné" : "Activer les notifications"}
+              {pushSubscribed ? "Déjà activé" : "Activer les notifications"}
             </button>
             <p className="mt-3 text-sm font-semibold text-slate-600">
               {pushMessage || (pushSubscribed ? "Notifications activées pour cet appareil." : "Notifications non activées.")}
