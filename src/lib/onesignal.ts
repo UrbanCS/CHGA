@@ -31,6 +31,25 @@ export function initOneSignal(): void {
         scope: "/push/onesignal/"
       },
       allowLocalhostAsSecureOrigin: true,
+      promptOptions: {
+        slidedown: {
+          prompts: [
+            {
+              type: "push",
+              autoPrompt: false,
+              text: {
+                actionMessage: "Recevez les nouvelles importantes de CHGA.",
+                acceptButton: "Autoriser",
+                cancelButton: "Plus tard",
+                "message.action.subscribed": "Merci pour votre abonnement!",
+                "message.action.resubscribed": "Notifications réactivées.",
+                "message.action.subscribing": "Activation des notifications...",
+                "message.action.subscribing.error": "Impossible d’activer les notifications."
+              }
+            }
+          ]
+        }
+      },
       notifyButton: {
         enable: false
       }
