@@ -32,7 +32,8 @@ export const handler: Handler = async (event) => {
     body: JSON.stringify({
       app_id: appId,
       target_channel: "push",
-      included_segments: ["Subscribed Users"],
+      isAnyWeb: true,
+      filters: [{ field: "session_count", relation: ">", value: "0" }],
       headings: {
         en: title,
         fr: title
