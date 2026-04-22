@@ -38,16 +38,17 @@ Inclus dans le MVP:
 - Manifest PWA, icônes, service worker et cache minimal de l'app shell
 - États chargement, erreur réseau et vide
 - Balados récents et événements dans l'onglet Plus
-- Architecture de webhook push prête à brancher
+- Notifications push OneSignal via webhook Netlify
+- Mini plugin WordPress pour envoyer une notification à la publication d'une nouvelle
 
 Phase 2:
 
-- Push complet avec OneSignal en production
 - Navigation par catégories et recherche
 - Favoris / lecture hors ligne d'articles
 - Lecteur balado intégré complet
 - Analytics PWA
 - Synchronisation fine du cache d'articles
+- Gestion avancée des segments OneSignal
 
 ### 4. Échéancier réaliste
 
@@ -86,6 +87,10 @@ Phase 2:
 │   ├── styles/index.css
 │   ├── App.tsx
 │   └── main.tsx
+├── wordpress/
+│   └── chga-push-webhook/
+│       ├── README.md
+│       └── chga-push-webhook.php
 ├── .env.example
 ├── netlify.toml
 ├── package.json
@@ -180,26 +185,36 @@ Raison: configuration rapide, coût faible au démarrage, intégration WordPress
 
 Déjà présent dans le MVP:
 
-- Service worker avec écoute `push`
+- SDK OneSignal Web configuré côté frontend
+- Service workers OneSignal sous `public/push/onesignal/`
 - Endpoint `/api/push-webhook`
-- Variable `VITE_ONESIGNAL_APP_ID` prévue
+- Variables Netlify `VITE_ONESIGNAL_APP_ID`, `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`
 - Secret optionnel `CHGA_PUSH_WEBHOOK_SECRET`
+- Plugin WordPress `wordpress/chga-push-webhook/`
 
-Étapes restantes:
+Variables Netlify requises:
 
-1. Créer une app Web Push dans OneSignal.
-2. Configurer le domaine de production Netlify.
-3. Ajouter `VITE_ONESIGNAL_APP_ID` dans Netlify.
-4. Ajouter le SDK OneSignal côté frontend.
-5. Installer/configurer le plugin OneSignal WordPress ou créer un webhook WordPress à la publication d'un post.
-6. Faire appeler `/api/push-webhook` par WordPress avec `x-chga-secret`.
-7. Dans `netlify/functions/push-webhook.ts`, appeler l'API REST OneSignal avec le titre, l'extrait et l'URL de la nouvelle.
+- `VITE_ONESIGNAL_APP_ID`
+- `ONESIGNAL_APP_ID`
+- `ONESIGNAL_REST_API_KEY`
+- `CHGA_PUSH_WEBHOOK_SECRET`
+
+Installation WordPress:
+
+1. Copier `wordpress/chga-push-webhook/` dans `wp-content/plugins/chga-push-webhook/`.
+2. Activer l'extension `CHGA Push Webhook` dans WordPress.
+3. Aller dans `Réglages > CHGA Push Webhook`.
+4. Mettre `https://chgamobile.netlify.app/api/push-webhook` comme Webhook URL.
+5. Mettre le même secret que `CHGA_PUSH_WEBHOOK_SECRET`.
+6. Publier une nouvelle de test.
+
+Le plugin envoie une notification seulement quand un article passe à `Publié`. Une modification d'article déjà publié ne renvoie pas de notification.
 
 ### 11. Limites actuelles
 
 - Les nouvelles nécessitent parfois un enrichissement par scraping serveur, car l'API REST WordPress ne retourne pas toujours le contenu complet.
 - Le cache service worker reste volontairement minimal et utilise une stratégie network-first pour les navigations.
-- Les notifications ne sont pas activées sans compte OneSignal et configuration du domaine final.
+- Les notifications nécessitent un compte OneSignal configuré sur le domaine final.
 - Les balados et événements sont en lecture légère dans l'onglet Plus.
 
 ### 12. Checklist finale de test
@@ -214,6 +229,9 @@ Déjà présent dans le MVP:
 - Vérifier l'onglet Plus
 - Vérifier `manifest.webmanifest`
 - Vérifier installation PWA dans Chrome mobile/desktop
+- S'abonner aux notifications depuis l'onglet Plus
+- Envoyer un test manuel vers `/api/push-webhook`
+- Publier une nouvelle de test dans WordPress avec le plugin activé
 - Tester hors ligne: l'app shell doit s'afficher
 - Tester sur iOS Safari et Android Chrome avant livraison client
 
@@ -257,16 +275,17 @@ Included in the MVP:
 - PWA manifest, icons, service worker, and minimal app shell cache
 - Loading, network error, and empty states
 - Recent podcasts and events in the More tab
-- Push webhook architecture ready to connect
+- OneSignal push notifications through a Netlify webhook
+- Small WordPress plugin to send a notification when a news post is published
 
 Phase 2:
 
-- Full production push notifications with OneSignal
 - Category navigation and search
 - Favorites / offline article reading
 - Full embedded podcast player
 - PWA analytics
 - More granular article caching
+- Advanced OneSignal segment management
 
 ### 4. Realistic Timeline
 
@@ -305,6 +324,10 @@ Phase 2:
 │   ├── styles/index.css
 │   ├── App.tsx
 │   └── main.tsx
+├── wordpress/
+│   └── chga-push-webhook/
+│       ├── README.md
+│       └── chga-push-webhook.php
 ├── .env.example
 ├── netlify.toml
 ├── package.json
@@ -399,26 +422,36 @@ Reason: quick setup, low cost at launch, possible WordPress integration, and les
 
 Already present in the MVP:
 
-- Service worker with a `push` listener
+- OneSignal Web SDK configured on the frontend
+- OneSignal service workers under `public/push/onesignal/`
 - `/api/push-webhook` endpoint
-- Planned `VITE_ONESIGNAL_APP_ID` variable
+- Netlify variables `VITE_ONESIGNAL_APP_ID`, `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`
 - Optional `CHGA_PUSH_WEBHOOK_SECRET`
+- WordPress plugin in `wordpress/chga-push-webhook/`
 
-Remaining steps:
+Required Netlify variables:
 
-1. Create a Web Push app in OneSignal.
-2. Configure the production Netlify domain.
-3. Add `VITE_ONESIGNAL_APP_ID` in Netlify.
-4. Add the OneSignal SDK on the frontend.
-5. Install/configure the OneSignal WordPress plugin or create a WordPress webhook on post publication.
-6. Make WordPress call `/api/push-webhook` with `x-chga-secret`.
-7. In `netlify/functions/push-webhook.ts`, call the OneSignal REST API with the news title, excerpt, and URL.
+- `VITE_ONESIGNAL_APP_ID`
+- `ONESIGNAL_APP_ID`
+- `ONESIGNAL_REST_API_KEY`
+- `CHGA_PUSH_WEBHOOK_SECRET`
+
+WordPress installation:
+
+1. Copy `wordpress/chga-push-webhook/` to `wp-content/plugins/chga-push-webhook/`.
+2. Activate the `CHGA Push Webhook` plugin in WordPress.
+3. Go to `Settings > CHGA Push Webhook`.
+4. Use `https://chgamobile.netlify.app/api/push-webhook` as the Webhook URL.
+5. Use the same secret as `CHGA_PUSH_WEBHOOK_SECRET`.
+6. Publish a test news post.
+
+The plugin only sends a notification when a post first changes to `Published`. Editing an already published post does not send another notification.
 
 ### 11. Current Limitations
 
 - News items sometimes require server-side page enrichment because the WordPress REST API does not always return complete content.
 - The service worker cache is intentionally minimal and uses network-first for navigations.
-- Push notifications are not active until OneSignal and the final domain are configured.
+- Push notifications require a OneSignal account configured for the final domain.
 - Podcasts and events are lightweight in the More tab.
 
 ### 12. Final Test Checklist
@@ -433,5 +466,8 @@ Remaining steps:
 - Check the More tab
 - Check `manifest.webmanifest`
 - Check PWA installation in Chrome mobile/desktop
+- Subscribe to notifications from the More tab
+- Send a manual test to `/api/push-webhook`
+- Publish a test WordPress post with the plugin active
 - Test offline mode: the app shell should display
 - Test on iOS Safari and Android Chrome before client delivery

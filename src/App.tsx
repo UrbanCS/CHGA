@@ -51,6 +51,14 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("article");
+    if (slug) {
+      window.history.replaceState({}, "", "/");
+      openArticle(slug);
+    }
+  }, []);
+
   const retryArticle = () => {
     if (articleSlug) openArticle(articleSlug);
   };
