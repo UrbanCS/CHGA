@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { StateBlock } from "../components/StateBlock";
 import { getJson } from "../lib/api";
 import { formatShortDate } from "../lib/date";
-import { requestPushPermission } from "../lib/onesignal";
+import {
+  getPushSubscriptionState,
+  getStoredPushSubscribed,
+  onPushSubscriptionChange,
+  requestPushPermission
+} from "../lib/onesignal";
 import type { EventItem, Podcast } from "../lib/types";
 
 export function MorePage() {
@@ -12,6 +17,7 @@ export function MorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pushMessage, setPushMessage] = useState("");
+  const [pushSubscribed, setPushSubscribed] = useState(() => getStoredPushSubscribed());
 
   const load = () => {
     setLoading(true);
@@ -27,9 +33,15 @@ export function MorePage() {
 
   useEffect(load, []);
 
+  useEffect(() => {
+    getPushSubscriptionState().then(setPushSubscribed);
+    onPushSubscriptionChange(setPushSubscribed);
+  }, []);
+
   const enableNotifications = () => {
     setPushMessage("Demande d’autorisation en cours...");
     requestPushPermission().then((granted) => {
+      setPushSubscribed(granted);
       setPushMessage(
         granted
           ? "Notifications activées pour cet appareil."
@@ -54,13 +66,18 @@ export function MorePage() {
               Recevez une alerte quand une nouvelle importante est publiée.
             </p>
             <button
-              className="mt-4 min-h-11 rounded-md bg-chga-red px-4 py-2 text-sm font-black text-white"
+              className={`mt-4 min-h-11 rounded-md px-4 py-2 text-sm font-black ${
+                pushSubscribed ? "bg-slate-200 text-slate-700" : "bg-chga-red text-white"
+              }`}
               type="button"
+              disabled={pushSubscribed}
               onClick={enableNotifications}
             >
-              Activer les notifications
+              {pushSubscribed ? "Déjà abonné" : "Activer les notifications"}
             </button>
-            {pushMessage ? <p className="mt-3 text-sm font-semibold text-slate-600">{pushMessage}</p> : null}
+            <p className="mt-3 text-sm font-semibold text-slate-600">
+              {pushMessage || (pushSubscribed ? "Notifications activées pour cet appareil." : "Notifications non activées.")}
+            </p>
           </div>
         </div>
       </div>
