@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
 import { getJson } from "./lib/api";
+import { initOneSignal } from "./lib/onesignal";
 import type { Article, NewsItem } from "./lib/types";
 import type { View } from "./lib/views";
 import { ArticlePage } from "./pages/ArticlePage";
@@ -34,6 +35,7 @@ export function App() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
+    initOneSignal();
   }, []);
 
   const openArticle = (slug: string) => {

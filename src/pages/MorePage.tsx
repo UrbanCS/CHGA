@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { StateBlock } from "../components/StateBlock";
 import { getJson } from "../lib/api";
 import { formatShortDate } from "../lib/date";
+import { requestPushPermission } from "../lib/onesignal";
 import type { EventItem, Podcast } from "../lib/types";
 
 export function MorePage() {
@@ -10,6 +11,7 @@ export function MorePage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pushMessage, setPushMessage] = useState("");
 
   const load = () => {
     setLoading(true);
@@ -25,6 +27,17 @@ export function MorePage() {
 
   useEffect(load, []);
 
+  const enableNotifications = () => {
+    setPushMessage("Demande d’autorisation en cours...");
+    requestPushPermission().then((granted) => {
+      setPushMessage(
+        granted
+          ? "Notifications activées pour cet appareil."
+          : "Notifications non activées. Vérifiez les permissions du navigateur."
+      );
+    });
+  };
+
   return (
     <section className="space-y-6">
       <div>
@@ -35,11 +48,19 @@ export function MorePage() {
       <div className="rounded-lg bg-white p-5 shadow-soft">
         <div className="flex items-start gap-3">
           <Bell className="mt-1 h-5 w-5 text-chga-red" />
-          <div>
+          <div className="flex-1">
             <h2 className="font-black text-chga-ink">Notifications push</h2>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Architecture prévue avec OneSignal. La configuration finale demande un compte OneSignal, l’ID d’app et un webhook WordPress.
+              Recevez une alerte quand une nouvelle importante est publiée.
             </p>
+            <button
+              className="mt-4 min-h-11 rounded-md bg-chga-red px-4 py-2 text-sm font-black text-white"
+              type="button"
+              onClick={enableNotifications}
+            >
+              Activer les notifications
+            </button>
+            {pushMessage ? <p className="mt-3 text-sm font-semibold text-slate-600">{pushMessage}</p> : null}
           </div>
         </div>
       </div>
