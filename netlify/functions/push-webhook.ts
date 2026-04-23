@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { OneSignalApiError, OneSignalConfigError, sendOneSignalPush } from "./_onesignal";
 import { json } from "./_response";
 
 export const handler: Handler = async (event) => {
@@ -11,50 +12,25 @@ export const handler: Handler = async (event) => {
     return json({ message: "Secret invalide." }, 401);
   }
 
-  const appId = process.env.ONESIGNAL_APP_ID;
-  const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-
-  if (!appId || !apiKey) {
-    return json({ message: "OneSignal n’est pas configuré côté Netlify." }, 500);
-  }
-
   const payload = parseBody(event.body);
   const title = payload.title || "CHGA";
   const excerpt = payload.excerpt || "Une nouvelle nouvelle est disponible.";
   const url = payload.url || "https://chgamobile.netlify.app/";
 
-  const oneSignalResponse = await fetch("https://api.onesignal.com/notifications", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      Authorization: `Key ${apiKey}`
-    },
-    body: JSON.stringify({
-      app_id: appId,
-      target_channel: "push",
-      isAnyWeb: true,
-      filters: [{ field: "session_count", relation: ">", value: "0" }],
-      headings: {
-        en: title,
-        fr: title
-      },
-      contents: {
-        en: excerpt,
-        fr: excerpt
-      },
-      url,
-      chrome_web_icon: "https://chgamobile.netlify.app/icons/icon-192.png",
-      chrome_web_image: payload.imageUrl || undefined
-    })
-  });
+  try {
+    const data = await sendOneSignalPush({ title, excerpt, url, imageUrl: payload.imageUrl });
+    return json({ message: "Notification envoyée.", details: data }, 202);
+  } catch (error) {
+    if (error instanceof OneSignalConfigError) {
+      return json({ message: error.message }, error.status);
+    }
 
-  const data = await oneSignalResponse.json().catch(() => ({}));
+    if (error instanceof OneSignalApiError) {
+      return json({ message: error.message, details: error.details }, error.status);
+    }
 
-  if (!oneSignalResponse.ok) {
-    return json({ message: "Erreur OneSignal.", details: data }, oneSignalResponse.status);
+    return json({ message: "Impossible d’envoyer la notification." }, 500);
   }
-
-  return json({ message: "Notification envoyée.", details: data }, 202);
 };
 
 function parseBody(body: string | null): { title?: string; excerpt?: string; url?: string; imageUrl?: string } {

@@ -188,18 +188,39 @@ Déjà présent dans le MVP:
 - SDK OneSignal Web configuré côté frontend
 - Service workers OneSignal sous `public/push/onesignal/`
 - Endpoint `/api/push-webhook`
+- Fonction planifiée `/api/check-news-push` qui vérifie les nouvelles CHGA toutes les 15 minutes
+- Stockage Netlify Blobs pour mémoriser les articles déjà notifiés
 - Variables Netlify `VITE_ONESIGNAL_APP_ID`, `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`
 - Secret optionnel `CHGA_PUSH_WEBHOOK_SECRET`
-- Plugin WordPress `wordpress/chga-push-webhook/`
+- Plugin WordPress optionnel `wordpress/chga-push-webhook/` si un accès admin devient disponible plus tard
 
 Variables Netlify requises:
 
 - `VITE_ONESIGNAL_APP_ID`
 - `ONESIGNAL_APP_ID`
 - `ONESIGNAL_REST_API_KEY`
+- `CHGA_PWA_URL`
 - `CHGA_PUSH_WEBHOOK_SECRET`
 
-Installation WordPress:
+Automatisation sans accès WordPress:
+
+1. Déployer le site sur Netlify.
+2. Vérifier que les variables OneSignal sont configurées.
+3. Netlify exécutera `netlify/functions/check-news-push.ts` toutes les 15 minutes.
+4. Au premier passage, la fonction initialise la liste des articles déjà vus et n'envoie aucune notification.
+5. Aux passages suivants, si une nouvelle CHGA apparaît, elle envoie une notification aux abonnés.
+
+Test manuel de la vérification automatique:
+
+```powershell
+$headers = @{
+  "x-chga-secret" = "votre-secret-netlify"
+}
+
+Invoke-RestMethod -Uri "https://chgamobile.netlify.app/api/check-news-push" -Method Post -Headers $headers
+```
+
+Option future avec accès WordPress:
 
 1. Copier `wordpress/chga-push-webhook/` dans `wp-content/plugins/chga-push-webhook/`.
 2. Activer l'extension `CHGA Push Webhook` dans WordPress.
@@ -215,6 +236,7 @@ Le plugin envoie une notification seulement quand un article passe à `Publié`.
 - Les nouvelles nécessitent parfois un enrichissement par scraping serveur, car l'API REST WordPress ne retourne pas toujours le contenu complet.
 - Le cache service worker reste volontairement minimal et utilise une stratégie network-first pour les navigations.
 - Les notifications nécessitent un compte OneSignal configuré sur le domaine final.
+- Sans accès WordPress, les notifications automatiques ont un délai maximal d'environ 15 minutes.
 - Les balados et événements sont en lecture légère dans l'onglet Plus.
 
 ### 12. Checklist finale de test
@@ -231,7 +253,8 @@ Le plugin envoie une notification seulement quand un article passe à `Publié`.
 - Vérifier installation PWA dans Chrome mobile/desktop
 - S'abonner aux notifications depuis l'onglet Plus
 - Envoyer un test manuel vers `/api/push-webhook`
-- Publier une nouvelle de test dans WordPress avec le plugin activé
+- Appeler `/api/check-news-push` une première fois pour initialiser Netlify Blobs
+- Vérifier les logs Netlify de la fonction planifiée après publication d'une nouvelle CHGA
 - Tester hors ligne: l'app shell doit s'afficher
 - Tester sur iOS Safari et Android Chrome avant livraison client
 
@@ -425,18 +448,39 @@ Already present in the MVP:
 - OneSignal Web SDK configured on the frontend
 - OneSignal service workers under `public/push/onesignal/`
 - `/api/push-webhook` endpoint
+- Scheduled `/api/check-news-push` function that checks CHGA news every 15 minutes
+- Netlify Blobs storage to remember already notified articles
 - Netlify variables `VITE_ONESIGNAL_APP_ID`, `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`
 - Optional `CHGA_PUSH_WEBHOOK_SECRET`
-- WordPress plugin in `wordpress/chga-push-webhook/`
+- Optional WordPress plugin in `wordpress/chga-push-webhook/` if admin access becomes available later
 
 Required Netlify variables:
 
 - `VITE_ONESIGNAL_APP_ID`
 - `ONESIGNAL_APP_ID`
 - `ONESIGNAL_REST_API_KEY`
+- `CHGA_PWA_URL`
 - `CHGA_PUSH_WEBHOOK_SECRET`
 
-WordPress installation:
+Automation without WordPress access:
+
+1. Deploy the site to Netlify.
+2. Make sure the OneSignal variables are configured.
+3. Netlify will run `netlify/functions/check-news-push.ts` every 15 minutes.
+4. On the first run, the function initializes the list of already seen articles and sends no notification.
+5. On later runs, if a new CHGA article appears, it sends a notification to subscribers.
+
+Manual test for the automatic check:
+
+```powershell
+$headers = @{
+  "x-chga-secret" = "your-netlify-secret"
+}
+
+Invoke-RestMethod -Uri "https://chgamobile.netlify.app/api/check-news-push" -Method Post -Headers $headers
+```
+
+Future option with WordPress access:
 
 1. Copy `wordpress/chga-push-webhook/` to `wp-content/plugins/chga-push-webhook/`.
 2. Activate the `CHGA Push Webhook` plugin in WordPress.
@@ -452,6 +496,7 @@ The plugin only sends a notification when a post first changes to `Published`. E
 - News items sometimes require server-side page enrichment because the WordPress REST API does not always return complete content.
 - The service worker cache is intentionally minimal and uses network-first for navigations.
 - Push notifications require a OneSignal account configured for the final domain.
+- Without WordPress access, automatic notifications can be delayed by up to about 15 minutes.
 - Podcasts and events are lightweight in the More tab.
 
 ### 12. Final Test Checklist
@@ -468,6 +513,7 @@ The plugin only sends a notification when a post first changes to `Published`. E
 - Check PWA installation in Chrome mobile/desktop
 - Subscribe to notifications from the More tab
 - Send a manual test to `/api/push-webhook`
-- Publish a test WordPress post with the plugin active
+- Call `/api/check-news-push` once to initialize Netlify Blobs
+- Check Netlify scheduled function logs after a new CHGA article is published
 - Test offline mode: the app shell should display
 - Test on iOS Safari and Android Chrome before client delivery

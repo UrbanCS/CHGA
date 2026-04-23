@@ -40,6 +40,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/check-news-push"
+  to = "/.netlify/functions/check-news-push"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
