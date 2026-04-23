@@ -75,16 +75,32 @@ const runCheck = async (event: Parameters<Handler>[0]): Promise<CheckResult> => 
 };
 
 const manualHandler: Handler = async (event) => {
+  const isManualHttpRequest = event.httpMethod === "POST";
   const secret = process.env.CHGA_PUSH_WEBHOOK_SECRET;
-  if (secret && event.headers["x-chga-secret"] !== secret) {
+
+  if (isManualHttpRequest && secret && event.headers["x-chga-secret"] !== secret) {
     return json({ message: "Secret invalide." }, 401);
   }
 
   try {
-    return json(await runCheck(event));
+    const result = await runCheck(event);
+    console.log("check-news-push", JSON.stringify({
+      mode: isManualHttpRequest ? "manual" : "scheduled",
+      checkedAt: result.checkedAt,
+      initialized: result.initialized,
+      totalNews: result.totalNews,
+      notificationsSent: result.notificationsSent,
+      notifiedTitles: result.notifiedTitles
+    }));
+    return json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue.";
     const name = error instanceof Error ? error.name : "UnknownError";
+    console.error("check-news-push error", JSON.stringify({
+      mode: isManualHttpRequest ? "manual" : "scheduled",
+      name,
+      message
+    }));
     return json({ message: "Impossible de vérifier les nouvelles.", error: message, name }, 500);
   }
 };
