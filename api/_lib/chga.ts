@@ -194,11 +194,7 @@ export async function getLiveInfo(): Promise<LiveInfo> {
 
 async function mapNewsPost(post: WpPost, detail: boolean): Promise<NewsItem> {
   const embeddedImage = getEmbeddedImage(post);
-  let scraped: Partial<NewsItem> = {};
-
-  if (detail || !embeddedImage || !post.excerpt?.rendered) {
-    scraped = parseArticlePage(await fetchText(post.link));
-  }
+  const scraped = parseArticlePage(await fetchText(post.link));
 
   return {
     id: post.id,
@@ -207,7 +203,7 @@ async function mapNewsPost(post: WpPost, detail: boolean): Promise<NewsItem> {
     date: post.date,
     category: getCategory(post) || scraped.category || "Actualité locale",
     excerpt: toText(post.excerpt?.rendered || scraped.excerpt || ""),
-    imageUrl: embeddedImage || scraped.imageUrl || FALLBACK_IMAGE,
+    imageUrl: scraped.imageUrl || embeddedImage || FALLBACK_IMAGE,
     link: post.link
   };
 }
