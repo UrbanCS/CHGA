@@ -89,7 +89,7 @@ const manualHandler: Handler = async (event) => {
   }
 };
 
-export const handler = schedule("*/15 * * * *", manualHandler);
+export const handler = schedule("*/5 * * * *", manualHandler);
 
 async function sendNewsNotification(item: NewsItem): Promise<void> {
   await sendOneSignalPush({
