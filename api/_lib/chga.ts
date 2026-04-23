@@ -286,12 +286,25 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
     const title = clean(match[1]);
     const audioUrl = absolutize(match[2]);
     const start = match.index || 0;
-    const articleMatch =
-      body.slice(start).match(/<article[^>]*class=["'][^"']*podcast__preview[^"']*["'][^>]*>([\s\S]*?)<\/article>/i);
-    const previewHtml = articleMatch?.[0] || "";
+    const previousStart = index > 0 ? (audioMatches[index - 1].index || 0) : 0;
+    const nextStart = audioMatches[index + 1]?.index || body.length;
+    const localWindow = body.slice(previousStart, nextStart);
+    const titlePattern = escapeRegex(title);
     const imageUrl = absolutize(
-      matchFirst(previewHtml, /<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
-        matchFirst(previewHtml, /<img[^>]+src=["']([^"']+)["']/i)
+      matchFirst(
+        localWindow,
+        new RegExp(
+          `<img[^>]+data-lazy-src=["']([^"']+)["'][\\s\\S]*?<h3[^>]*>[\\s\\S]*?${titlePattern}[\\s\\S]*?<\\/h3>`,
+          "i"
+        )
+      ) ||
+        matchFirst(
+          localWindow,
+          new RegExp(
+            `<img[^>]+src=["']([^"']+)["'][\\s\\S]*?<h3[^>]*>[\\s\\S]*?${titlePattern}[\\s\\S]*?<\\/h3>`,
+            "i"
+          )
+        )
     ) || fallbackImage;
 
     blocks.push({
@@ -362,6 +375,10 @@ function matchFirst(value: string, regex: RegExp): string {
 function lastMatch(value: string, regex: RegExp): string {
   const matches = Array.from(value.matchAll(regex));
   return matches.at(-1)?.[1]?.trim() || "";
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function absolutize(url = ""): string {
