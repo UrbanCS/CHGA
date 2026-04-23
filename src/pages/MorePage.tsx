@@ -4,6 +4,7 @@ import { StateBlock } from "../components/StateBlock";
 import { getJson } from "../lib/api";
 import { formatShortDate } from "../lib/date";
 import {
+  disablePushNotifications,
   getPushSubscriptionState,
   getStoredPushSubscribed,
   onPushSubscriptionChange,
@@ -18,6 +19,7 @@ export function MorePage() {
   const [error, setError] = useState("");
   const [pushMessage, setPushMessage] = useState("");
   const [pushSubscribed, setPushSubscribed] = useState(() => getStoredPushSubscribed());
+  const [pushBusy, setPushBusy] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -39,6 +41,7 @@ export function MorePage() {
   }, []);
 
   const enableNotifications = () => {
+    setPushBusy(true);
     setPushMessage("Demande d’autorisation en cours...");
     requestPushPermission().then((granted) => {
       setPushSubscribed(granted);
@@ -47,7 +50,22 @@ export function MorePage() {
           ? "Notifications activées pour cet appareil."
           : "Notifications non activées. Vérifiez les permissions du navigateur."
       );
-    });
+    }).finally(() => setPushBusy(false));
+  };
+
+  const disableNotifications = () => {
+    setPushBusy(true);
+    setPushMessage("Désactivation des notifications en cours...");
+    disablePushNotifications()
+      .then((stillSubscribed) => {
+        setPushSubscribed(stillSubscribed);
+        setPushMessage(
+          stillSubscribed
+            ? "Impossible de désactiver les notifications pour le moment."
+            : "Notifications CHGA désactivées pour cet appareil."
+        );
+      })
+      .finally(() => setPushBusy(false));
   };
 
   return (
@@ -70,14 +88,27 @@ export function MorePage() {
                 pushSubscribed ? "bg-slate-200 text-slate-700" : "bg-chga-red text-white"
               }`}
               type="button"
-              disabled={pushSubscribed}
-              onClick={enableNotifications}
+              disabled={pushBusy}
+              onClick={pushSubscribed ? disableNotifications : enableNotifications}
             >
-              {pushSubscribed ? "Déjà activé" : "Activer les notifications"}
+              {pushBusy
+                ? "Veuillez patienter..."
+                : pushSubscribed
+                  ? "Désactiver les notifications"
+                  : "Activer les notifications"}
             </button>
             <p className="mt-3 text-sm font-semibold text-slate-600">
-              {pushMessage || (pushSubscribed ? "Notifications activées pour cet appareil." : "Notifications non activées.")}
+              {pushMessage ||
+                (pushSubscribed
+                  ? "Notifications activées pour cet appareil."
+                  : "Notifications non activées.")}
             </p>
+            {pushSubscribed ? (
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                La désactivation ici coupe les notifications CHGA sur cet appareil. Pour retirer aussi l’autorisation du navigateur,
+                utilisez les réglages du site dans votre navigateur.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

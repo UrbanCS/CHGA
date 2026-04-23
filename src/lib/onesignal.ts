@@ -7,6 +7,8 @@ type OneSignalApi = {
   User?: {
     PushSubscription?: {
       optedIn?: boolean;
+      optIn?: () => Promise<void> | void;
+      optOut?: () => Promise<void> | void;
       addEventListener?: (
         event: "change",
         callback: (state: { current?: { optedIn?: boolean } }) => void
@@ -97,6 +99,25 @@ export function getPushSubscriptionState(): Promise<boolean> {
 
   return new Promise((resolve) => {
     window.OneSignalDeferred?.push((OneSignal) => {
+      const subscribed = Boolean(OneSignal.User?.PushSubscription?.optedIn);
+      setStoredPushSubscribed(subscribed);
+      resolve(subscribed);
+    });
+  });
+}
+
+export function disablePushNotifications(): Promise<boolean> {
+  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+
+  if (!appId || typeof window === "undefined") {
+    return Promise.resolve(false);
+  }
+
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+  return new Promise((resolve) => {
+    window.OneSignalDeferred?.push(async (OneSignal) => {
+      await OneSignal.User?.PushSubscription?.optOut?.();
       const subscribed = Boolean(OneSignal.User?.PushSubscription?.optedIn);
       setStoredPushSubscribed(subscribed);
       resolve(subscribed);
