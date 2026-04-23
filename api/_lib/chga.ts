@@ -53,6 +53,7 @@ export type NewsItem = {
 export type AudioClip = {
   title: string;
   audioUrl: string;
+  imageUrl: string;
 };
 
 export type ArticleBlock =
@@ -285,6 +286,13 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
     const title = clean(match[1]);
     const audioUrl = absolutize(match[2]);
     const start = match.index || 0;
+    const articleMatch =
+      body.slice(start).match(/<article[^>]*class=["'][^"']*podcast__preview[^"']*["'][^>]*>([\s\S]*?)<\/article>/i);
+    const previewHtml = articleMatch?.[0] || "";
+    const imageUrl = absolutize(
+      matchFirst(previewHtml, /<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
+        matchFirst(previewHtml, /<img[^>]+src=["']([^"']+)["']/i)
+    ) || fallbackImage;
 
     blocks.push({
       index: start + index,
@@ -292,7 +300,8 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
         type: "audio",
         clip: {
           title,
-          audioUrl
+          audioUrl,
+          imageUrl
         }
       }
     });

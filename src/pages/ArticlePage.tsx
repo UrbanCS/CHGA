@@ -38,7 +38,6 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
                   key={block.type === "audio" ? block.clip.audioUrl : `html-${index}`}
                   block={block}
                   articleDate={article.date}
-                  articleImageUrl={article.imageUrl}
                 />
               ))}
             </section>
@@ -67,15 +66,13 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
 
 function ArticleContentBlock({
   block,
-  articleDate,
-  articleImageUrl
+  articleDate
 }: {
   block: ArticleBlock;
   articleDate: string;
-  articleImageUrl: string;
 }) {
   if (block.type === "audio") {
-    return <AudioClipCard clip={block.clip} articleDate={articleDate} articleImageUrl={articleImageUrl} />;
+    return <AudioClipCard clip={block.clip} articleDate={articleDate} />;
   }
 
   return (
@@ -86,11 +83,11 @@ function ArticleContentBlock({
   );
 }
 
-function AudioClipCard({ clip, articleDate, articleImageUrl }: { clip: AudioClip; articleDate: string; articleImageUrl: string }) {
+function AudioClipCard({ clip, articleDate }: { clip: AudioClip; articleDate: string }) {
   return (
     <section className="overflow-hidden rounded-lg bg-chga-blue p-4 text-white shadow-soft">
       <div className="flex gap-4">
-        <img className="h-24 w-24 shrink-0 rounded-md object-cover" src={articleImageUrl} alt="" loading="lazy" />
+        <img className="h-24 w-24 shrink-0 rounded-md object-cover" src={clip.imageUrl} alt="" loading="lazy" />
         <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
             <p className="text-xs font-black uppercase tracking-normal text-cyan-300">{formatDate(articleDate)}</p>
