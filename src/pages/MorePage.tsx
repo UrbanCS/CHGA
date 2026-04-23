@@ -133,33 +133,6 @@ export function MorePage() {
 
       <div className="rounded-lg bg-white p-5 shadow-soft">
         <div className="flex items-start gap-3">
-          <Headphones className="mt-1 h-5 w-5 text-chga-blue" />
-          <div className="flex-1">
-            <h2 className="font-black text-chga-ink">Suivez CHGA</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Retrouvez la radio sur ses réseaux sociaux officiels.
-            </p>
-            <div className="mt-4 flex gap-3">
-              {socialLinks.map(({ name, href, icon: Icon }) => (
-                <a
-                  key={name}
-                  className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 text-chga-blue transition hover:border-chga-blue hover:bg-slate-50"
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={name}
-                  title={name}
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-lg bg-white p-5 shadow-soft">
-        <div className="flex items-start gap-3">
           <Smartphone className="mt-1 h-5 w-5 text-chga-blue" />
           <div className="flex-1">
             <h2 className="font-black text-chga-ink">Installer l’application</h2>
@@ -188,6 +161,33 @@ export function MorePage() {
                   <span className="font-bold text-chga-ink">Installer l’application</span>.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg bg-white p-5 shadow-soft">
+        <div className="flex items-start gap-3">
+          <Headphones className="mt-1 h-5 w-5 text-chga-blue" />
+          <div className="flex-1">
+            <h2 className="font-black text-chga-ink">Suivez CHGA</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Retrouvez la radio sur ses réseaux sociaux officiels.
+            </p>
+            <div className="mt-4 flex gap-3">
+              {socialLinks.map(({ name, href, icon: Icon }) => (
+                <a
+                  key={name}
+                  className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 text-chga-blue transition hover:border-chga-blue hover:bg-slate-50"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={name}
+                  title={name}
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
             </div>
           </div>
         </div>
