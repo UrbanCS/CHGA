@@ -1,4 +1,4 @@
-import { CalendarDays, Headphones, Bell } from "lucide-react";
+import { CalendarDays, Headphones, Bell, Facebook, Instagram, Twitter } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StateBlock } from "../components/StateBlock";
 import { getJson } from "../lib/api";
@@ -11,6 +11,24 @@ import {
   requestPushPermission
 } from "../lib/onesignal";
 import type { EventItem, Podcast } from "../lib/types";
+
+const socialLinks = [
+  {
+    name: "Facebook",
+    href: "https://www.facebook.com/chga.fm",
+    icon: Facebook
+  },
+  {
+    name: "X",
+    href: "https://twitter.com/RadioChga",
+    icon: Twitter
+  },
+  {
+    name: "Instagram",
+    href: "https://www.instagram.com/radiochga/",
+    icon: Instagram
+  }
+] as const;
 
 export function MorePage() {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
@@ -109,6 +127,33 @@ export function MorePage() {
                 utilisez les réglages du site dans votre navigateur.
               </p>
             ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg bg-white p-5 shadow-soft">
+        <div className="flex items-start gap-3">
+          <Headphones className="mt-1 h-5 w-5 text-chga-blue" />
+          <div className="flex-1">
+            <h2 className="font-black text-chga-ink">Suivez CHGA</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Retrouvez la radio sur ses réseaux sociaux officiels.
+            </p>
+            <div className="mt-4 flex gap-3">
+              {socialLinks.map(({ name, href, icon: Icon }) => (
+                <a
+                  key={name}
+                  className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 text-chga-blue transition hover:border-chga-blue hover:bg-slate-50"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={name}
+                  title={name}
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
