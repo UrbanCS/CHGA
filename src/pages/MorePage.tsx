@@ -1,4 +1,4 @@
-import { CalendarDays, Headphones, Bell, Facebook, Instagram, Twitter } from "lucide-react";
+import { CalendarDays, Headphones, Bell, Facebook, Instagram, Twitter, Share, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StateBlock } from "../components/StateBlock";
 import { getJson } from "../lib/api";
@@ -153,6 +153,41 @@ export function MorePage() {
                   <Icon className="h-5 w-5" />
                 </a>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg bg-white p-5 shadow-soft">
+        <div className="flex items-start gap-3">
+          <Smartphone className="mt-1 h-5 w-5 text-chga-blue" />
+          <div className="flex-1">
+            <h2 className="font-black text-chga-ink">Installer l’application</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Ajoutez CHGA Mobile à l’écran d’accueil pour l’ouvrir comme une application.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2">
+                  <Share className="h-4 w-4 text-chga-blue" />
+                  <h3 className="text-sm font-black text-chga-ink">iPhone</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Ouvrez l’app dans Safari, appuyez sur <span className="font-bold text-chga-ink">Partager</span>, puis choisissez{" "}
+                  <span className="font-bold text-chga-ink">Ajouter à l’écran d’accueil</span>.
+                </p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-chga-blue" />
+                  <h3 className="text-sm font-black text-chga-ink">Android</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Ouvrez l’app dans Chrome, appuyez sur le menu du navigateur, puis choisissez{" "}
+                  <span className="font-bold text-chga-ink">Ajouter à l’écran d’accueil</span> ou{" "}
+                  <span className="font-bold text-chga-ink">Installer l’application</span>.
+                </p>
+              </div>
             </div>
           </div>
         </div>
