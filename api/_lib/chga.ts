@@ -233,8 +233,11 @@ function parseArticlePage(html: string): Partial<Article> {
     matchFirst(html, /<!-- Flexible components -->([\s\S]*?)<div class="social">/i);
   const body = flexibleContent || article || html;
   const imageUrl = absolutize(
-    matchFirst(body, /<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
-      matchFirst(body, /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+    matchFirst(article, /<figure[^>]*class=["'][^"']*figure__main[^"']*["'][^>]*>[\s\S]*?<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
+      matchFirst(article, /<figure[^>]*class=["'][^"']*figure__main[^"']*["'][^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i) ||
+      matchFirst(html, /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      matchFirst(html, /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      matchFirst(body, /<img[^>]+data-lazy-src=["']([^"']+)["']/i)
   );
   const contentBlocks = parseContentBlocks(body, imageUrl || FALLBACK_IMAGE);
   const paragraphs = contentBlocks.filter((block): block is Extract<ArticleBlock, { type: "html" }> => block.type === "html");
