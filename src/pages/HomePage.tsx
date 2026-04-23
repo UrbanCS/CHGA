@@ -1,4 +1,4 @@
-import { Bell, Radio } from "lucide-react";
+import { Bell, Download, Radio, Smartphone } from "lucide-react";
 import type { NewsItem } from "../lib/types";
 import { NewsCard } from "../components/NewsCard";
 import { StateBlock } from "../components/StateBlock";
@@ -11,9 +11,25 @@ type Props = {
   onOpenArticle: (slug: string) => void;
   onOpenLive: () => void;
   onOpenNews: () => void;
+  canInstall: boolean;
+  installing: boolean;
+  onInstall: () => void;
+  onOpenMore: () => void;
 };
 
-export function HomePage({ news, loading, error, onRetry, onOpenArticle, onOpenLive, onOpenNews }: Props) {
+export function HomePage({
+  news,
+  loading,
+  error,
+  onRetry,
+  onOpenArticle,
+  onOpenLive,
+  onOpenNews,
+  canInstall,
+  installing,
+  onInstall,
+  onOpenMore
+}: Props) {
   return (
     <div className="space-y-5">
       <section className="rounded-lg bg-chga-blue p-5 text-white shadow-soft">
@@ -39,6 +55,28 @@ export function HomePage({ news, loading, error, onRetry, onOpenArticle, onOpenL
             <Bell className="h-4 w-4" />
             Nouvelles
           </button>
+        </div>
+        <div className="mt-3">
+          {canInstall ? (
+            <button
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm font-bold text-white"
+              type="button"
+              disabled={installing}
+              onClick={onInstall}
+            >
+              <Download className="h-4 w-4" />
+              {installing ? "Installation..." : "Installer l’app"}
+            </button>
+          ) : (
+            <button
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm font-bold text-white"
+              type="button"
+              onClick={onOpenMore}
+            >
+              <Smartphone className="h-4 w-4" />
+              Comment l’ajouter à l’écran d’accueil
+            </button>
+          )}
         </div>
       </section>
 

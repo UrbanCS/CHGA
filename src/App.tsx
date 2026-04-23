@@ -10,6 +10,11 @@ import { LivePage } from "./pages/LivePage";
 import { MorePage } from "./pages/MorePage";
 import { NewsPage } from "./pages/NewsPage";
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
+
 export function App() {
   const [view, setView] = useState<View>("home");
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -19,6 +24,8 @@ export function App() {
   const [article, setArticle] = useState<Article | null>(null);
   const [articleLoading, setArticleLoading] = useState(false);
   const [articleError, setArticleError] = useState("");
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installing, setInstalling] = useState(false);
 
   const loadNews = () => {
     setNewsLoading(true);
@@ -36,6 +43,26 @@ export function App() {
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
     initOneSignal();
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPromptEvent(null);
+      setInstalling(false);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
 
   const openArticle = (slug: string) => {
@@ -68,6 +95,27 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const openMore = () => {
+    changeView("more");
+  };
+
+  const triggerInstall = async () => {
+    if (!installPromptEvent) {
+      openMore();
+      return;
+    }
+
+    setInstalling(true);
+
+    try {
+      await installPromptEvent.prompt();
+      await installPromptEvent.userChoice;
+    } finally {
+      setInstallPromptEvent(null);
+      setInstalling(false);
+    }
+  };
+
   return (
     <div className="min-h-dvh bg-chga-mist pb-24 text-chga-ink">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -96,6 +144,10 @@ export function App() {
             onOpenArticle={openArticle}
             onOpenLive={() => changeView("live")}
             onOpenNews={() => changeView("news")}
+            canInstall={Boolean(installPromptEvent)}
+            installing={installing}
+            onInstall={triggerInstall}
+            onOpenMore={openMore}
           />
         ) : null}
         {view === "news" ? (
