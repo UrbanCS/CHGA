@@ -74,7 +74,7 @@ export function HomePage({
               onClick={onOpenMore}
             >
               <Smartphone className="h-4 w-4" />
-              Comment l’ajouter à l’écran d’accueil
+              Voir comment l’installer
             </button>
           )}
         </div>
