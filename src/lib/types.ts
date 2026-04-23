@@ -12,7 +12,6 @@ export type NewsItem = {
 export type AudioClip = {
   title: string;
   audioUrl: string;
-  imageUrl: string;
 };
 
 export type ArticleBlock =
@@ -26,6 +25,7 @@ export type ArticleBlock =
     };
 
 export type Article = NewsItem & {
+  author: string;
   contentHtml: string;
   audioClips: AudioClip[];
   contentBlocks: ArticleBlock[];

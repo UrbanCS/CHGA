@@ -26,12 +26,20 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-normal text-chga-red">{article.category}</p>
             <h1 className="text-3xl font-black leading-tight text-chga-ink">{article.title}</h1>
-            <p className="text-sm text-slate-500">{formatDate(article.date)}</p>
+            <div className="space-y-1 text-sm text-slate-500">
+              <p>{formatDate(article.date)}</p>
+              {article.author ? <p className="font-semibold text-slate-600">Par {article.author}</p> : null}
+            </div>
           </div>
           {article.contentBlocks.length ? (
             <section className="space-y-4">
               {article.contentBlocks.map((block, index) => (
-                <ArticleContentBlock key={block.type === "audio" ? block.clip.audioUrl : `html-${index}`} block={block} articleDate={article.date} />
+                <ArticleContentBlock
+                  key={block.type === "audio" ? block.clip.audioUrl : `html-${index}`}
+                  block={block}
+                  articleDate={article.date}
+                  articleImageUrl={article.imageUrl}
+                />
               ))}
             </section>
           ) : article.contentHtml ? (
@@ -57,9 +65,17 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
   );
 }
 
-function ArticleContentBlock({ block, articleDate }: { block: ArticleBlock; articleDate: string }) {
+function ArticleContentBlock({
+  block,
+  articleDate,
+  articleImageUrl
+}: {
+  block: ArticleBlock;
+  articleDate: string;
+  articleImageUrl: string;
+}) {
   if (block.type === "audio") {
-    return <AudioClipCard clip={block.clip} articleDate={articleDate} />;
+    return <AudioClipCard clip={block.clip} articleDate={articleDate} articleImageUrl={articleImageUrl} />;
   }
 
   return (
@@ -70,11 +86,11 @@ function ArticleContentBlock({ block, articleDate }: { block: ArticleBlock; arti
   );
 }
 
-function AudioClipCard({ clip, articleDate }: { clip: AudioClip; articleDate: string }) {
+function AudioClipCard({ clip, articleDate, articleImageUrl }: { clip: AudioClip; articleDate: string; articleImageUrl: string }) {
   return (
     <section className="overflow-hidden rounded-lg bg-chga-blue p-4 text-white shadow-soft">
       <div className="flex gap-4">
-        <img className="h-24 w-24 shrink-0 rounded-md object-cover" src={clip.imageUrl} alt="" loading="lazy" />
+        <img className="h-24 w-24 shrink-0 rounded-md object-cover" src={articleImageUrl} alt="" loading="lazy" />
         <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
             <p className="text-xs font-black uppercase tracking-normal text-cyan-300">{formatDate(articleDate)}</p>

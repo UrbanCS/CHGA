@@ -53,7 +53,6 @@ export type NewsItem = {
 export type AudioClip = {
   title: string;
   audioUrl: string;
-  imageUrl: string;
 };
 
 export type ArticleBlock =
@@ -67,6 +66,7 @@ export type ArticleBlock =
     };
 
 export type Article = NewsItem & {
+  author: string;
   contentHtml: string;
   audioClips: AudioClip[];
   contentBlocks: ArticleBlock[];
@@ -134,6 +134,7 @@ export async function getArticle(slug: string): Promise<Article> {
   return {
     ...base,
     title: scraped.title || base.title,
+    author: scraped.author || "",
     category: scraped.category || base.category,
     excerpt: scraped.excerpt || base.excerpt,
     imageUrl: scraped.imageUrl || base.imageUrl,
@@ -244,6 +245,9 @@ function parseArticlePage(html: string): Partial<Article> {
 
   return {
     title: clean(matchFirst(body, /<h1[^>]*>([\s\S]*?)<\/h1>/i)),
+    author:
+      clean(matchFirst(html, /<meta[^>]+name=["']author["'][^>]+content=["']([^"']+)["']/i)) ||
+      clean(matchFirst(html, /<span>\s*Par\s+([\s\S]*?)<\/span>/i)),
     category: clean(matchFirst(body, /<span[^>]*class=["'][^"']*blog-item__article-cat[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)),
     imageUrl,
     excerpt: toText(paragraphs[0]?.html || ""),
@@ -280,11 +284,6 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
     const title = clean(match[1]);
     const audioUrl = absolutize(match[2]);
     const start = match.index || 0;
-    const prefix = body.slice(Math.max(0, start - 1200), start);
-    const imageUrl =
-      absolutize(lastMatch(prefix, /<img[^>]+data-lazy-src=["']([^"']+)["']/gi)) ||
-      absolutize(lastMatch(prefix, /<img[^>]+src=["']([^"']+)["']/gi)) ||
-      fallbackImage;
 
     blocks.push({
       index: start + index,
@@ -292,8 +291,7 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
         type: "audio",
         clip: {
           title,
-          audioUrl,
-          imageUrl
+          audioUrl
         }
       }
     });
