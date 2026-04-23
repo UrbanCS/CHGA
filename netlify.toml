@@ -46,7 +46,7 @@
 
 [[redirects]]
   from = "/api/check-news-push"
-  to = "/.netlify/functions/check-news-push"
+  to = "/.netlify/functions/check-news-push-manual"
   status = 200
 
 [[redirects]]
