@@ -261,9 +261,7 @@ function parseArticlePage(html: string): Partial<Article> {
 
 function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[] {
   const audioMatches = Array.from(
-    body.matchAll(
-      /<h3[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/h3>[\s\S]*?(https:\/\/www\.chga\.fm\/app\/uploads\/[^"'<> \s]+\.mp3)[\s\S]*?<\/article>/gi
-    )
+    body.matchAll(/<article[^>]*class=["'][^"']*podcast__preview[^"']*["'][^>]*>([\s\S]*?)<\/article>/gi)
   );
 
   const paragraphMatches = Array.from(body.matchAll(/<p\b[^>]*>[\s\S]*?<\/p>/gi)).filter(
@@ -283,28 +281,16 @@ function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[]
   }
 
   for (const [index, match] of audioMatches.entries()) {
-    const title = clean(match[1]);
-    const audioUrl = absolutize(match[2]);
+    const previewHtml = match[0];
+    const title = clean(matchFirst(previewHtml, /<h3[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/h3>/i));
+    const audioUrl = absolutize(
+      matchFirst(previewHtml, /<source[^>]+src=["']([^"']+\.mp3(?:\?_[^"']*)?)["']/i) ||
+        matchFirst(previewHtml, /<a[^>]+href=["']([^"']+\.mp3)["']/i)
+    );
     const start = match.index || 0;
-    const previousStart = index > 0 ? (audioMatches[index - 1].index || 0) : 0;
-    const nextStart = audioMatches[index + 1]?.index || body.length;
-    const localWindow = body.slice(previousStart, nextStart);
-    const titlePattern = escapeRegex(title);
     const imageUrl = absolutize(
-      matchFirst(
-        localWindow,
-        new RegExp(
-          `<img[^>]+data-lazy-src=["']([^"']+)["'][\\s\\S]*?<h3[^>]*>[\\s\\S]*?${titlePattern}[\\s\\S]*?<\\/h3>`,
-          "i"
-        )
-      ) ||
-        matchFirst(
-          localWindow,
-          new RegExp(
-            `<img[^>]+src=["']([^"']+)["'][\\s\\S]*?<h3[^>]*>[\\s\\S]*?${titlePattern}[\\s\\S]*?<\\/h3>`,
-            "i"
-          )
-        )
+      matchFirst(previewHtml, /<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
+        matchFirst(previewHtml, /<img[^>]+src=["']([^"']+)["']/i)
     ) || fallbackImage;
 
     blocks.push({
@@ -375,10 +361,6 @@ function matchFirst(value: string, regex: RegExp): string {
 function lastMatch(value: string, regex: RegExp): string {
   const matches = Array.from(value.matchAll(regex));
   return matches.at(-1)?.[1]?.trim() || "";
-}
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function absolutize(url = ""): string {
