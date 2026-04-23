@@ -37,3 +37,7 @@ a {
   font-weight: 700;
   text-decoration: underline;
 }
+
+.article-audio {
+  accent-color: #151f6d;
+}

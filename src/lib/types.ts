@@ -9,8 +9,16 @@ export type NewsItem = {
   link: string;
 };
 
+export type AudioClip = {
+  title: string;
+  audioUrl: string;
+  imageUrl: string;
+  excerpt: string;
+};
+
 export type Article = NewsItem & {
   contentHtml: string;
+  audioClips: AudioClip[];
 };
 
 export type Podcast = {
