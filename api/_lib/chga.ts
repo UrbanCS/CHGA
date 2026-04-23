@@ -54,12 +54,22 @@ export type AudioClip = {
   title: string;
   audioUrl: string;
   imageUrl: string;
-  excerpt: string;
 };
+
+export type ArticleBlock =
+  | {
+      type: "html";
+      html: string;
+    }
+  | {
+      type: "audio";
+      clip: AudioClip;
+    };
 
 export type Article = NewsItem & {
   contentHtml: string;
   audioClips: AudioClip[];
+  contentBlocks: ArticleBlock[];
 };
 
 export type Podcast = {
@@ -128,7 +138,8 @@ export async function getArticle(slug: string): Promise<Article> {
     excerpt: scraped.excerpt || base.excerpt,
     imageUrl: scraped.imageUrl || base.imageUrl,
     contentHtml: scraped.contentHtml || sanitizeHtml(posts[0].content?.rendered || ""),
-    audioClips: scraped.audioClips || []
+    audioClips: scraped.audioClips || [],
+    contentBlocks: scraped.contentBlocks || []
   };
 }
 
@@ -216,54 +227,91 @@ function getCategory(post: WpPost): string {
 
 function parseArticlePage(html: string): Partial<Article> {
   const article = matchFirst(html, /<article[^>]*class=["'][^"']*blog-item__article[^"']*["'][^>]*>([\s\S]*?)<\/article>/i) || "";
-  const body = article || html;
+  const flexibleContent =
+    matchFirst(html, /<!-- Flexible components -->([\s\S]*?)<!-- Footer -->/i) ||
+    matchFirst(html, /<!-- Flexible components -->([\s\S]*?)<div class="social">/i);
+  const body = flexibleContent || article || html;
   const imageUrl = absolutize(
     matchFirst(body, /<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
       matchFirst(body, /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
   );
-  const contentMatch =
-    matchFirst(body, /<div[^>]*class=["'][^"']*wysiwyg__content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ||
-    matchFirst(body, /<div[^>]*class=["'][^"']*blog-item__article-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
-  const paragraphs = Array.from(body.matchAll(/<p\b[^>]*>[\s\S]*?<\/p>/gi))
-    .map((match) => match[0])
-    .filter((paragraph) => !/Partager|Ajustez|cookies/i.test(toText(paragraph)));
-  const contentHtml = sanitizeHtml(contentMatch || paragraphs.join(""));
+  const contentBlocks = parseContentBlocks(body, imageUrl || FALLBACK_IMAGE);
+  const paragraphs = contentBlocks.filter((block): block is Extract<ArticleBlock, { type: "html" }> => block.type === "html");
+  const audioClips = contentBlocks
+    .filter((block): block is Extract<ArticleBlock, { type: "audio" }> => block.type === "audio")
+    .map((block) => block.clip);
+  const contentHtml = paragraphs.map((block) => block.html).join("");
 
   return {
     title: clean(matchFirst(body, /<h1[^>]*>([\s\S]*?)<\/h1>/i)),
     category: clean(matchFirst(body, /<span[^>]*class=["'][^"']*blog-item__article-cat[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)),
     imageUrl,
-    excerpt: toText(paragraphs[0] || ""),
+    excerpt: toText(paragraphs[0]?.html || ""),
     contentHtml,
-    audioClips: parseAudioClips(body, imageUrl || FALLBACK_IMAGE)
+    audioClips,
+    contentBlocks
   };
 }
 
-function parseAudioClips(body: string, fallbackImage: string): AudioClip[] {
-  const matches = Array.from(
-    body.matchAll(/<h3[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/h3>[\s\S]*?(https:\/\/www\.chga\.fm\/app\/uploads\/[^"'<> \s]+\.mp3)/gi)
+function parseContentBlocks(body: string, fallbackImage: string): ArticleBlock[] {
+  const audioMatches = Array.from(
+    body.matchAll(
+      /<h3[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/h3>[\s\S]*?(https:\/\/www\.chga\.fm\/app\/uploads\/[^"'<> \s]+\.mp3)[\s\S]*?<\/article>/gi
+    )
   );
 
-  return matches.map((match, index) => {
+  const paragraphMatches = Array.from(body.matchAll(/<p\b[^>]*>[\s\S]*?<\/p>/gi)).filter(
+    (match) => !/Partager|Ajustez|cookies/i.test(toText(match[0]))
+  );
+
+  const blocks: Array<{ index: number; block: ArticleBlock }> = [];
+
+  for (const match of paragraphMatches) {
+    blocks.push({
+      index: match.index || 0,
+      block: {
+        type: "html",
+        html: sanitizeHtml(match[0])
+      }
+    });
+  }
+
+  for (const [index, match] of audioMatches.entries()) {
     const title = clean(match[1]);
     const audioUrl = absolutize(match[2]);
     const start = match.index || 0;
-    const end = matches[index + 1]?.index || body.length;
-    const segment = body.slice(start, end);
-    const excerpt = toText(matchFirst(segment, /<p\b[^>]*>([\s\S]*?)<\/p>/i));
     const prefix = body.slice(Math.max(0, start - 1200), start);
     const imageUrl =
       absolutize(lastMatch(prefix, /<img[^>]+data-lazy-src=["']([^"']+)["']/gi)) ||
       absolutize(lastMatch(prefix, /<img[^>]+src=["']([^"']+)["']/gi)) ||
       fallbackImage;
 
-    return {
-      title,
-      audioUrl,
-      imageUrl,
-      excerpt
-    };
-  });
+    blocks.push({
+      index: start + index,
+      block: {
+        type: "audio",
+        clip: {
+          title,
+          audioUrl,
+          imageUrl
+        }
+      }
+    });
+  }
+
+  return blocks
+    .sort((a, b) => a.index - b.index)
+    .reduce<ArticleBlock[]>((accumulator, entry) => {
+      const previous = accumulator.at(-1);
+
+      if (entry.block.type === "html" && previous?.type === "html") {
+        previous.html = `${previous.html}${entry.block.html}`;
+        return accumulator;
+      }
+
+      accumulator.push(entry.block);
+      return accumulator;
+    }, []);
 }
 
 function sanitizeHtml(html: string): string {

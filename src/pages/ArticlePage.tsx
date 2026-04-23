@@ -1,7 +1,7 @@
 import { ArrowLeft, ExternalLink, Radio } from "lucide-react";
 import { StateBlock } from "../components/StateBlock";
 import { formatDate } from "../lib/date";
-import type { Article, AudioClip } from "../lib/types";
+import type { Article, AudioClip, ArticleBlock } from "../lib/types";
 
 type Props = {
   article: Article | null;
@@ -28,14 +28,13 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
             <h1 className="text-3xl font-black leading-tight text-chga-ink">{article.title}</h1>
             <p className="text-sm text-slate-500">{formatDate(article.date)}</p>
           </div>
-          {article.audioClips.length ? (
+          {article.contentBlocks.length ? (
             <section className="space-y-4">
-              {article.audioClips.map((clip) => (
-                <AudioClipCard key={clip.audioUrl} clip={clip} articleDate={article.date} />
+              {article.contentBlocks.map((block, index) => (
+                <ArticleContentBlock key={block.type === "audio" ? block.clip.audioUrl : `html-${index}`} block={block} articleDate={article.date} />
               ))}
             </section>
-          ) : null}
-          {article.contentHtml ? (
+          ) : article.contentHtml ? (
             <div
               className="article-body rounded-lg bg-white p-5 text-[17px] leading-8 text-slate-800 shadow-soft"
               dangerouslySetInnerHTML={{ __html: article.contentHtml }}
@@ -58,6 +57,19 @@ export function ArticlePage({ article, loading, error, onBack, onRetry }: Props)
   );
 }
 
+function ArticleContentBlock({ block, articleDate }: { block: ArticleBlock; articleDate: string }) {
+  if (block.type === "audio") {
+    return <AudioClipCard clip={block.clip} articleDate={articleDate} />;
+  }
+
+  return (
+    <div
+      className="article-body rounded-lg bg-white p-5 text-[17px] leading-8 text-slate-800 shadow-soft"
+      dangerouslySetInnerHTML={{ __html: block.html }}
+    />
+  );
+}
+
 function AudioClipCard({ clip, articleDate }: { clip: AudioClip; articleDate: string }) {
   return (
     <section className="overflow-hidden rounded-lg bg-chga-blue p-4 text-white shadow-soft">
@@ -75,14 +87,10 @@ function AudioClipCard({ clip, articleDate }: { clip: AudioClip; articleDate: st
           </div>
         </div>
       </div>
-      {clip.excerpt ? (
-        <p className="mt-4 text-sm leading-6 text-white/90">{clip.excerpt}</p>
-      ) : (
-        <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-white/85">
-          <Radio className="h-4 w-4" />
-          Extrait audio CHGA
-        </div>
-      )}
+      <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-white/85">
+        <Radio className="h-4 w-4" />
+        Extrait audio CHGA
+      </div>
     </section>
   );
 }

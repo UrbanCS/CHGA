@@ -13,12 +13,22 @@ export type AudioClip = {
   title: string;
   audioUrl: string;
   imageUrl: string;
-  excerpt: string;
 };
+
+export type ArticleBlock =
+  | {
+      type: "html";
+      html: string;
+    }
+  | {
+      type: "audio";
+      clip: AudioClip;
+    };
 
 export type Article = NewsItem & {
   contentHtml: string;
   audioClips: AudioClip[];
+  contentBlocks: ArticleBlock[];
 };
 
 export type Podcast = {
