@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { connectLambda, getStore } from "@netlify/blobs";
 import { schedule, type Handler } from "@netlify/functions";
 import { getNews, type NewsItem } from "../../api/_lib/chga";
 import { getArticleUrl, sendOneSignalPush } from "./_onesignal";
@@ -23,7 +23,9 @@ const STATE_KEY = "notified-news";
 const MAX_STORED_IDS = 100;
 const MAX_NOTIFICATIONS_PER_RUN = 3;
 
-const runCheck = async (): Promise<CheckResult> => {
+const runCheck = async (event: Parameters<Handler>[0]): Promise<CheckResult> => {
+  connectLambda(event as unknown as Parameters<typeof connectLambda>[0]);
+
   const checkedAt = new Date().toISOString();
   const news = await getNews(10);
   const store = getStore(STORE_NAME);
@@ -79,10 +81,11 @@ const manualHandler: Handler = async (event) => {
   }
 
   try {
-    return json(await runCheck());
+    return json(await runCheck(event));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue.";
-    return json({ message: "Impossible de vérifier les nouvelles.", error: message }, 500);
+    const name = error instanceof Error ? error.name : "UnknownError";
+    return json({ message: "Impossible de vérifier les nouvelles.", error: message, name }, 500);
   }
 };
 
