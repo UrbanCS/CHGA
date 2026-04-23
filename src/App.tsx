@@ -44,7 +44,7 @@ export function App() {
     setArticle(null);
     setArticleError("");
     setArticleLoading(true);
-    getJson<Article>(`/api/news/${slug}`)
+    getJson<Article>(`/api/news-detail?slug=${encodeURIComponent(slug)}`)
       .then(setArticle)
       .catch((error: Error) => setArticleError(error.message))
       .finally(() => setArticleLoading(false));
