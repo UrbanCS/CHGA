@@ -1,4 +1,5 @@
 import { Home, MoreHorizontal, Newspaper, Radio } from "lucide-react";
+import { siteConfig } from "../lib/site-config";
 import type { View } from "../lib/views";
 
 type Props = {
@@ -7,10 +8,10 @@ type Props = {
 };
 
 const tabs: Array<{ view: View; label: string; icon: typeof Home }> = [
-  { view: "home", label: "Accueil", icon: Home },
-  { view: "news", label: "Nouvelles", icon: Newspaper },
-  { view: "live", label: "Direct", icon: Radio },
-  { view: "more", label: "Plus", icon: MoreHorizontal }
+  { view: "home", label: siteConfig.navigation.home, icon: Home },
+  { view: "news", label: siteConfig.navigation.news, icon: Newspaper },
+  { view: "live", label: siteConfig.navigation.live, icon: Radio },
+  { view: "more", label: siteConfig.navigation.more, icon: MoreHorizontal }
 ];
 
 export function BottomNav({ view, onChange }: Props) {

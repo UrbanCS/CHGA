@@ -1,4 +1,5 @@
 import type { NewsItem } from "../lib/types";
+import { siteConfig } from "../lib/site-config";
 import { NewsCard } from "../components/NewsCard";
 import { StateBlock } from "../components/StateBlock";
 
@@ -14,8 +15,8 @@ export function NewsPage({ news, loading, error, onRetry, onOpenArticle }: Props
   return (
     <section className="space-y-4">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-normal text-chga-red">Actualité locale</p>
-        <h1 className="mt-1 text-3xl font-black text-chga-ink">Nouvelles</h1>
+        <p className="text-sm font-semibold uppercase tracking-normal text-chga-red">{siteConfig.news.eyebrow}</p>
+        <h1 className="mt-1 text-3xl font-black text-chga-ink">{siteConfig.news.title}</h1>
       </div>
       {loading ? <StateBlock type="loading" title="Chargement des nouvelles" /> : null}
       {error ? <StateBlock type="error" title="Nouvelles indisponibles" message={error} onRetry={onRetry} /> : null}

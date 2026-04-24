@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
 import { getJson } from "./lib/api";
 import { initOneSignal } from "./lib/onesignal";
+import { siteConfig } from "./lib/site-config";
 import type { Article, NewsItem } from "./lib/types";
 import type { View } from "./lib/views";
 import { ArticlePage } from "./pages/ArticlePage";
@@ -43,6 +44,20 @@ export function App() {
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
     initOneSignal();
+  }, []);
+
+  useEffect(() => {
+    document.title = siteConfig.branding.appName;
+
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    if (descriptionTag) {
+      descriptionTag.setAttribute("content", siteConfig.branding.browserDescription);
+    }
+
+    const themeTag = document.querySelector('meta[name="theme-color"]');
+    if (themeTag) {
+      themeTag.setAttribute("content", siteConfig.branding.themeColor);
+    }
   }, []);
 
   useEffect(() => {
@@ -121,15 +136,15 @@ export function App() {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-xl items-center justify-between px-4 py-3">
           <button className="text-left" type="button" onClick={() => changeView("home")}>
-            <p className="text-xl font-black text-chga-blue">CHGA</p>
-            <p className="-mt-1 text-xs font-semibold text-slate-500">Mobile</p>
+            <p className="text-xl font-black text-chga-blue">{siteConfig.branding.headerTitle}</p>
+            <p className="-mt-1 text-xs font-semibold text-slate-500">{siteConfig.branding.headerSubtitle}</p>
           </button>
           <button
             className="min-h-10 rounded-md bg-chga-red px-3 py-2 text-sm font-black text-white"
             type="button"
             onClick={() => changeView("live")}
           >
-            Direct
+            {siteConfig.navigation.live}
           </button>
         </div>
       </header>

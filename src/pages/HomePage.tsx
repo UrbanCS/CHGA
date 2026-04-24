@@ -1,4 +1,5 @@
 import { Bell, Download, Radio, Smartphone } from "lucide-react";
+import { siteConfig } from "../lib/site-config";
 import type { NewsItem } from "../lib/types";
 import { NewsCard } from "../components/NewsCard";
 import { StateBlock } from "../components/StateBlock";
@@ -33,10 +34,10 @@ export function HomePage({
   return (
     <div className="space-y-5">
       <section className="rounded-lg bg-chga-blue p-5 text-white shadow-soft">
-        <p className="text-sm font-semibold text-white/75">Radio communautaire de la Vallée-de-la-Gatineau</p>
-        <h1 className="mt-2 text-3xl font-black leading-tight">CHGA Mobile</h1>
+        <p className="text-sm font-semibold text-white/75">{siteConfig.branding.organizationLine}</p>
+        <h1 className="mt-2 text-3xl font-black leading-tight">{siteConfig.home.title}</h1>
         <p className="mt-3 text-sm leading-6 text-white/85">
-          Nouvelles locales, direct, balados et événements dans une PWA légère.
+          {siteConfig.home.description}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <button
@@ -45,7 +46,7 @@ export function HomePage({
             onClick={onOpenLive}
           >
             <Radio className="h-4 w-4" />
-            Direct
+            {siteConfig.home.primaryActionLabel}
           </button>
           <button
             className="flex min-h-12 items-center justify-center gap-2 rounded-md bg-chga-red px-3 py-2 text-sm font-bold text-white"
@@ -53,7 +54,7 @@ export function HomePage({
             onClick={onOpenNews}
           >
             <Bell className="h-4 w-4" />
-            Nouvelles
+            {siteConfig.home.secondaryActionLabel}
           </button>
         </div>
         <div className="mt-3">
@@ -65,7 +66,7 @@ export function HomePage({
               onClick={onInstall}
             >
               <Download className="h-4 w-4" />
-              {installing ? "Installation..." : "Installer l’app"}
+              {installing ? "Installation..." : siteConfig.home.installActionLabel}
             </button>
           ) : (
             <button
@@ -74,7 +75,7 @@ export function HomePage({
               onClick={onOpenMore}
             >
               <Smartphone className="h-4 w-4" />
-              Voir comment l’installer
+              {siteConfig.home.installHelpLabel}
             </button>
           )}
         </div>
@@ -82,16 +83,16 @@ export function HomePage({
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-black text-chga-ink">Dernières nouvelles</h2>
+          <h2 className="text-xl font-black text-chga-ink">{siteConfig.home.latestNewsTitle}</h2>
           <button className="text-sm font-bold text-chga-blue" type="button" onClick={onOpenNews}>
-            Tout voir
+            {siteConfig.home.latestNewsActionLabel}
           </button>
         </div>
         {loading ? <StateBlock type="loading" title="Chargement des nouvelles" /> : null}
         {error ? <StateBlock type="error" title="Nouvelles indisponibles" message={error} onRetry={onRetry} /> : null}
         {!loading && !error && news.length === 0 ? <StateBlock type="empty" title="Aucune nouvelle trouvée" /> : null}
         <div className="space-y-4">
-          {news.slice(0, 4).map((item) => (
+          {news.slice(0, siteConfig.features.featuredNewsCount).map((item) => (
             <NewsCard key={item.id} item={item} onOpen={onOpenArticle} />
           ))}
         </div>

@@ -1,6 +1,7 @@
 import { Pause, Play, Radio } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getJson } from "../lib/api";
+import { siteConfig } from "../lib/site-config";
 import type { LiveInfo } from "../lib/types";
 import { StateBlock } from "../components/StateBlock";
 
@@ -38,8 +39,8 @@ export function LivePage() {
   return (
     <section className="space-y-5">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-normal text-chga-red">En ondes</p>
-        <h1 className="mt-1 text-3xl font-black text-chga-ink">Écoute en direct</h1>
+        <p className="text-sm font-semibold uppercase tracking-normal text-chga-red">{siteConfig.live.eyebrow}</p>
+        <h1 className="mt-1 text-3xl font-black text-chga-ink">{siteConfig.live.title}</h1>
       </div>
       {loading ? <StateBlock type="loading" title="Chargement du direct" /> : null}
       {error ? <StateBlock type="error" title="Direct indisponible" message={error} onRetry={load} /> : null}
@@ -48,7 +49,7 @@ export function LivePage() {
           <div className="flex items-center gap-4">
             <img className="h-20 w-20 rounded-lg object-cover" src={live.thumbnail} alt="" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-chga-red">En direct</p>
+              <p className="text-sm font-semibold text-chga-red">{siteConfig.live.liveLabel}</p>
               <h2 className="truncate text-2xl font-black text-chga-ink">{live.title}</h2>
               {live.schedule?.timeframe ? <p className="text-sm text-slate-600">{live.schedule.timeframe}</p> : null}
             </div>
@@ -59,7 +60,7 @@ export function LivePage() {
             onClick={togglePlay}
           >
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            {playing ? "Pause" : "Écouter CHGA"}
+            {playing ? siteConfig.live.pauseLabel : siteConfig.live.playLabel}
           </button>
           <audio ref={audioRef} src={live.streamUrl} preload="none" onEnded={() => setPlaying(false)} />
           {live.next?.title ? (
@@ -67,7 +68,7 @@ export function LivePage() {
               <div className="flex items-center gap-3">
                 <Radio className="h-5 w-5 text-chga-blue" />
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-normal text-slate-500">Prochainement</p>
+                  <p className="text-xs font-bold uppercase tracking-normal text-slate-500">{siteConfig.live.nextLabel}</p>
                   <p className="font-bold text-chga-ink">{live.next.title}</p>
                   {live.next.schedule?.timeframe ? <p className="text-sm text-slate-600">{live.next.schedule.timeframe}</p> : null}
                 </div>
