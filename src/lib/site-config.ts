@@ -42,6 +42,9 @@ export const siteConfig = {
     liveLabel: "En direct",
     playLabel: "Écouter CHGA",
     pauseLabel: "Pause",
+    connectingLabel: "Connexion…",
+    playbackErrorMessage: "Le lecteur n’a pas pu démarrer sur cet appareil.",
+    fallbackLabel: "Ouvrir le flux audio",
     nextLabel: "Prochainement"
   },
   more: {
