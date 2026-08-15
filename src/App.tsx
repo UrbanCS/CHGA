@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BottomNav } from "./components/BottomNav";
-import { getJson } from "./lib/api";
+import { getJson, prefetchJson } from "./lib/api";
 import { initOneSignal } from "./lib/onesignal";
 import { siteConfig } from "./lib/site-config";
 import type { Article, NewsItem } from "./lib/types";
@@ -38,6 +38,15 @@ export function App() {
   };
 
   useEffect(loadNews, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      prefetchJson("/api/podcasts");
+      prefetchJson("/api/events");
+    }, 1_500);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
