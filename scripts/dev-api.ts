@@ -23,6 +23,18 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (url.pathname === "/api/news-detail") {
+      const slug = url.searchParams.get("slug");
+
+      if (!slug) {
+        send(response, 400, { message: "Slug requis." });
+        return;
+      }
+
+      send(response, 200, await getArticle(slug));
+      return;
+    }
+
     if (url.pathname === "/api/live") {
       send(response, 200, await getLiveInfo());
       return;
