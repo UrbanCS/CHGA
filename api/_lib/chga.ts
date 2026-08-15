@@ -113,7 +113,7 @@ export type LiveInfo = {
 
 export async function getNews(limit = 12): Promise<NewsItem[]> {
   const posts = await fetchJson<WpPost[]>(
-    `${WP_BASE}/wp/v2/posts?categories=19&per_page=${limit}&_embed=1`
+    `${WP_BASE}/wp/v2/posts?categories=19&per_page=${limit}&_fields=id,date,slug,link,title,excerpt,categories`
   );
 
   return Promise.all(posts.map((post) => mapNewsPost(post, false)));
@@ -147,7 +147,7 @@ export async function getArticle(slug: string): Promise<Article> {
 
 export async function getPodcasts(limit = 6): Promise<Podcast[]> {
   const episodes = await fetchJson<WpPost[]>(
-    `${WP_BASE}/wp/v2/podcast?per_page=${limit}&_embed=1`
+    `${WP_BASE}/wp/v2/podcast?per_page=${limit}&_fields=id,date,link,title,excerpt,content,meta`
   );
 
   return episodes.map((episode) => ({

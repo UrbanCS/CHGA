@@ -10,7 +10,12 @@ export const handler: Handler = async (event) => {
       return json({ message: "Slug requis." }, 400);
     }
 
-    return json(await getArticle(slug));
+    return json(await getArticle(slug), 200, {
+      browserMaxAge: 300,
+      edgeMaxAge: 300,
+      edgeStaleWhileRevalidate: 3_600,
+      varyQuery: ["slug"]
+    });
   } catch (error) {
     return errorJson(error);
   }
