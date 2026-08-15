@@ -1,4 +1,4 @@
-import { Pause, Play, Radio } from "lucide-react";
+import { LoaderCircle, Pause, Play, Radio } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getJson } from "../lib/api";
 import { siteConfig } from "../lib/site-config";
@@ -10,6 +10,8 @@ export function LivePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [playing, setPlaying] = useState(false);
+  const [playbackLoading, setPlaybackLoading] = useState(false);
+  const [playbackError, setPlaybackError] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const load = () => {
@@ -24,16 +26,29 @@ export function LivePage() {
   useEffect(load, []);
 
   const togglePlay = async () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
+    if (!audio.paused) {
+      audio.pause();
       return;
     }
 
-    await audioRef.current.play();
-    setPlaying(true);
+    setPlaybackError("");
+    setPlaybackLoading(true);
+
+    try {
+      // Mobile browsers with preload disabled need the request to start inside
+      // the user's tap event or they can reject the play request.
+      if (audio.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+        audio.load();
+      }
+      await audio.play();
+    } catch {
+      setPlaying(false);
+      setPlaybackLoading(false);
+      setPlaybackError(siteConfig.live.playbackErrorMessage);
+    }
   };
 
   return (
@@ -58,11 +73,60 @@ export function LivePage() {
             className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-md bg-chga-red px-4 py-3 text-base font-black text-white"
             type="button"
             onClick={togglePlay}
+            aria-label={playing ? siteConfig.live.pauseLabel : siteConfig.live.playLabel}
           >
-            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            {playing ? siteConfig.live.pauseLabel : siteConfig.live.playLabel}
+            {playbackLoading ? (
+              <LoaderCircle className="h-5 w-5 animate-spin" />
+            ) : playing ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="h-5 w-5" />
+            )}
+            {playbackLoading
+              ? siteConfig.live.connectingLabel
+              : playing
+                ? siteConfig.live.pauseLabel
+                : siteConfig.live.playLabel}
           </button>
-          <audio ref={audioRef} src={live.streamUrl} preload="none" onEnded={() => setPlaying(false)} />
+          <audio
+            ref={audioRef}
+            src={live.streamUrl}
+            preload="none"
+            playsInline
+            onPlaying={() => {
+              setPlaying(true);
+              setPlaybackLoading(false);
+              setPlaybackError("");
+            }}
+            onPause={() => {
+              setPlaying(false);
+              setPlaybackLoading(false);
+            }}
+            onWaiting={() => setPlaybackLoading(true)}
+            onCanPlay={() => setPlaybackLoading(false)}
+            onEnded={() => {
+              setPlaying(false);
+              setPlaybackLoading(false);
+            }}
+            onError={() => {
+              setPlaying(false);
+              setPlaybackLoading(false);
+              setPlaybackError(siteConfig.live.playbackErrorMessage);
+            }}
+          />
+          {playbackError ? (
+            <div className="mt-3 text-center text-sm" role="alert">
+              <p className="text-chga-red">{playbackError}</p>
+              <a
+                className="mt-2 inline-block font-bold text-chga-blue underline underline-offset-2"
+                href={live.streamUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {siteConfig.live.fallbackLabel}
+              </a>
+            </div>
+          ) : null}
           {live.next?.title ? (
             <div className="mt-5 rounded-lg bg-chga-mist p-4">
               <div className="flex items-center gap-3">
